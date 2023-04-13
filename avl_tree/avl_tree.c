@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 static struct Node {
     int key;
@@ -93,6 +95,29 @@ void add(AvlTree *tree, int key) {
     }
 }
 
+static struct Node *find(struct Node *curr, int key) {
+    if (curr == NULL) {
+        return NULL;
+    }
+    if (curr->key == key) {
+        return curr;
+    } else {
+        if (key < curr->key) {
+            return find(curr->left, key);
+        } else {
+            return find(curr->right, key);
+        }
+    }
+}
+
+bool consist(AvlTree *tree, int key) {
+    if (tree->root == NULL) {
+        return false;
+    } else {
+        return find(tree->root, key) != NULL;
+    }
+}
+
 int get_height(AvlTree *tree) {
     return tree->root == NULL ? 0 : tree->root->height;
 }
@@ -105,6 +130,62 @@ static void clear_nodes(struct Node *curr) {
         clear_nodes(curr->right);
     }
     free(curr);
+}
+
+static struct Node* find_min(struct Node* node) {
+    return node->left != NULL ? find_min(node->left) : node;
+}
+
+static struct Node* remove_min(struct Node* node) {
+    if (node->left==0 )
+        return node->right;
+    node->left = remove_min(node->left);
+    return balance(node);
+}
+
+static struct Node* remove_node(struct Node* node, int key) {
+    if (node == NULL) {
+        return NULL;
+    }
+    if (key < node->key) {
+        node->left = remove_node(node->left, key);
+    } else if (key > node->key) {
+        node->right = remove_node(node->right, key);
+    } else {
+        struct Node *left = node->left;
+        struct Node *right = node->right;
+        free(node);
+        if (right == NULL) {
+            return left;
+        }
+        struct Node *min = find_min(right);
+        min->right = remove_min(right);
+        min->left = left;
+        return balance(min);
+    }
+    return balance(node);
+}
+
+void delete(AvlTree *tree, int key) {
+    if (tree->root == NULL) {
+        return;
+    } else {
+        tree->root = remove_node(tree->root, key);
+    }
+}
+
+static void print_nodes(struct Node *curr, FILE *stream) {
+    if (curr->left != NULL) {
+        print_nodes(curr->left, stream);
+    }
+    fprintf(stream, "%d ", curr->key);
+    if (curr->right != NULL) {
+        print_nodes(curr->right, stream);
+    }
+}
+
+void traverse(AvlTree *tree, FILE *stream) {
+    print_nodes(tree->root, stream);
 }
 
 void clear_tree(AvlTree *tree) {
