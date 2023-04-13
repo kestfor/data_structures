@@ -11,7 +11,7 @@ void insert(FibonacciHeap *heap, int value);
 
 int extract_min(FibonacciHeap *heap);
 
-bool empty(FibonacciHeap *heap);
+int get_min(FibonacciHeap *heap);
 
 void clear_heap(FibonacciHeap *heap);
 
