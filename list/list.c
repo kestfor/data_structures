@@ -176,6 +176,7 @@ void insert(List *list, int ind, int data) {
     tmp->next->next = curr;
     tmp->next->prev = tmp;
     curr->prev = tmp->next;
+    list->len++;
 }
 
 void delete(List *list, int ind) {
@@ -191,4 +192,5 @@ void delete(List *list, int ind) {
     node_to_del->prev->next = node_to_del->next;
     node_to_del->next->prev = node_to_del->prev;
     free(node_to_del);
+    list->len--;
 }
