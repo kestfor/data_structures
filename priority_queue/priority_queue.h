@@ -3,6 +3,18 @@
 
 #include <stdbool.h>
 
+typedef struct FibonacciHeap FibonacciHeap;
+
+FibonacciHeap *heap_init(void);
+
+void insert(FibonacciHeap *heap, int value);
+
+int extract_min(FibonacciHeap *heap);
+
+int get_min(FibonacciHeap *heap);
+
+void clear_heap(FibonacciHeap *heap);
+
 typedef struct PriorityQueue PriorityQueue;
 
 PriorityQueue *priority_queue_init(void);
