@@ -7,6 +7,8 @@ vector *vector_init(int size);
 
 void push_back(vector *v, int value);
 
+void shrink_to_fit(vector *v);
+
 void resize(vector *v, int new_size);
 
 void pop_back(vector *v);

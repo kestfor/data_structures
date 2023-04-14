@@ -35,6 +35,13 @@ void push_back(vector *v, int value) {
     }
 }
 
+void shrink_to_fit(vector *v) {
+    if (v->size != v->capacity) {
+        v->array = realloc(v->array, v->size);
+        v->capacity = v->size;
+    }
+}
+
 void resize(vector *v, int new_size) {
     if (new_size < v->size) {
         v->size = new_size;
