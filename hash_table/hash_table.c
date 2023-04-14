@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-bool equal(void *first, size_t size_first, void *second, size_t size_second) {
+static bool equal(void *first, size_t size_first, void *second, size_t size_second) {
     if (size_first != size_second) {
         return false;
     }
@@ -16,14 +16,14 @@ bool equal(void *first, size_t size_first, void *second, size_t size_second) {
     return true;
 }
 
-typedef struct {
+static struct HashTableItem {
     void *key;
     size_t size_key;
     void *value;
 } HashTableItem;
 
-static HashTableItem *table_item_init(void *key, size_t size_key, void *value, size_t size_value) {
-    HashTableItem *new = malloc(sizeof(HashTableItem));
+static struct HashTableItem *table_item_init(void *key, size_t size_key, void *value, size_t size_value) {
+    struct HashTableItem *new = malloc(sizeof(struct HashTableItem));
     new->key = malloc(size_key);
     new->size_key = size_key;
     new->value = malloc(size_value);
@@ -32,25 +32,25 @@ static HashTableItem *table_item_init(void *key, size_t size_key, void *value, s
     return new;
 }
 
-void clear_table_item(HashTableItem *item) {
+static void clear_table_item(struct HashTableItem *item) {
     free(item->key);
     free(item->value);
     free(item);
 }
 
 static struct LinkedList {
-    HashTableItem *item;
+    struct HashTableItem *item;
     struct LinkedList *next;
 } LinkedList;
 
-static struct LinkedList *list_init(HashTableItem *item) {
+static struct LinkedList *list_init(struct HashTableItem *item) {
     struct LinkedList *new = malloc(sizeof(struct LinkedList));
     new->item = item;
     new->next = NULL;
     return new;
 }
 
-static struct LinkedList *push_front(struct LinkedList *head, HashTableItem *item) {
+static struct LinkedList *push_front(struct LinkedList *head, struct HashTableItem *item) {
     struct LinkedList *new_head = calloc(1, sizeof(struct LinkedList));
     new_head->item =  item;
     new_head->next = head;
@@ -80,7 +80,7 @@ static unsigned int hash(const unsigned char *key, size_t len) {
 }
 
 typedef struct {
-    HashTableItem **bucket;
+    struct HashTableItem **bucket;
     struct LinkedList **overflow_bucket;
     int size;
     int capacity;
@@ -88,7 +88,7 @@ typedef struct {
 
 HashTable *table_init(int capacity) {
     HashTable *new = malloc(sizeof(HashTable));
-    new->bucket = calloc(capacity, sizeof(HashTableItem*));
+    new->bucket = calloc(capacity, sizeof(struct HashTableItem*));
     new->overflow_bucket = calloc(capacity, sizeof(struct LinkedList*));
     new->capacity = capacity;
     new->size = 0;
@@ -131,7 +131,7 @@ static void insert(HashTable *table, void *key, size_t size_key, void *value, si
     }
 }
 
-static HashTableItem *get_item(HashTable *table, void *key, size_t size_key) {
+static struct HashTableItem *get_item(HashTable *table, void *key, size_t size_key) {
     unsigned int ind = hash(key, size_key) % table->capacity;
     if (table->overflow_bucket[ind] == NULL) {
         if (table->bucket[ind] != NULL) {
@@ -152,7 +152,7 @@ static HashTableItem *get_item(HashTable *table, void *key, size_t size_key) {
 }
 
 void *get(HashTable *table, void *key, size_t size_key) {
-    HashTableItem *item = get_item(table, key, size_key);
+    struct HashTableItem *item = get_item(table, key, size_key);
     if (item == NULL) {
         exit(EXIT_FAILURE);
     } else {
@@ -204,7 +204,7 @@ int get_size(HashTable *table) {
 void update(HashTable *table, void *key, size_t size_key, void *value, size_t size_value) {
     unsigned int ind = hash(key, size_key) % table->capacity;
     if (table->overflow_bucket[ind] != NULL || table->bucket[ind] != NULL) {
-        HashTableItem *item = get_item(table, key, size_key);
+        struct HashTableItem *item = get_item(table, key, size_key);
         memcpy(item->value, value, size_value);
     } else {
         insert(table, key, size_key, value, size_value);
