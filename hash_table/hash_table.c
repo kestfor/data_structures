@@ -175,6 +175,7 @@ void delete(HashTable *table, void *key, size_t size_key) {
                 table->overflow_bucket[ind] = curr->next;
                 clear_table_item(curr->item);
                 free(curr);
+                table->size--;
             } else {
                 struct LinkedList *prev = curr;
                 while (curr != NULL) {
@@ -182,6 +183,7 @@ void delete(HashTable *table, void *key, size_t size_key) {
                         prev->next = curr->next;
                         clear_table_item(curr->item);
                         free(curr);
+                        table->size--;
                         return;
                     }
                     prev = curr;
@@ -191,6 +193,7 @@ void delete(HashTable *table, void *key, size_t size_key) {
         } else {
             clear_table_item(table->bucket[ind]);
             table->bucket[ind] = NULL;
+            table->size--;
         }
 
     }
@@ -204,7 +207,7 @@ void update(HashTable *table, void *key, size_t size_key, void *value, size_t si
     unsigned int ind = hash(key, size_key) % table->capacity;
     if (table->overflow_bucket[ind] != NULL || table->bucket[ind] != NULL) {
         HashTableItem *item = get_item(table, key, size_key);
-        item->value = value;
+        memcpy(item->value, value, size_value);
     } else {
         insert(table, key, size_key, value, size_value);
     }
