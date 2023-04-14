@@ -11,7 +11,9 @@ void clear_tree(AvlTree *tree);
 
 int get_height(AvlTree *tree);
 
-void add(AvlTree *tree, int key);
+void add(AvlTree *tree, int key, long long value);
+
+long long get(AvlTree *tree, int key);
 
 void traverse(AvlTree *tree, FILE *stream);
 

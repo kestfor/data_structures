@@ -4,14 +4,15 @@
 
 static struct Node {
     int key;
+    long long value;
     int height;
     struct Node *left;
     struct Node *right;
 } Node;
 
-struct Node *node_init(int key) {
+struct Node *node_init(int key, long long value) {
     struct Node *new_node = malloc(sizeof(struct Node));
-    *new_node = (struct Node) {key, 1, NULL, NULL};
+    *new_node = (struct Node) {key, value, 1, NULL, NULL};
     return new_node;
 }
 
@@ -68,14 +69,17 @@ typedef struct {
     struct Node *root;
 } AvlTree;
 
-static struct Node *insert(struct Node *curr_node, int key) {
+static struct Node *insert(struct Node *curr_node, int key, long long value) {
     if (!curr_node) {
-        return node_init(key);
+        return node_init(key, value);
+    }
+    if (curr_node->key == key) {
+        curr_node->value = value;
     }
     if (key < curr_node->key) {
-        curr_node->left = insert(curr_node->left, key);
+        curr_node->left = insert(curr_node->left, key, value);
     } else {
-        curr_node->right = insert(curr_node->right, key);
+        curr_node->right = insert(curr_node->right, key, value);
     }
     return balance(curr_node);
 }
@@ -86,12 +90,12 @@ AvlTree *tree_init(void) {
     return new_tree;
 }
 
-void add(AvlTree *tree, int key) {
+void add(AvlTree *tree, int key, long long value) {
     if (tree->root == NULL) {
-        struct Node *new_node = node_init(key);
+        struct Node *new_node = node_init(key, value);
         tree->root = new_node;
     } else {
-        tree->root = insert(tree->root, key);
+        tree->root = insert(tree->root, key, value);
     }
 }
 
@@ -107,6 +111,15 @@ static struct Node *find(struct Node *curr, int key) {
         } else {
             return find(curr->right, key);
         }
+    }
+}
+
+long long get(AvlTree *tree, int key) {
+    struct Node *res = find(tree->root, key);
+    if (res == NULL) {
+        exit(EXIT_FAILURE);
+    } else {
+        return res->value;
     }
 }
 
@@ -178,7 +191,7 @@ static void print_nodes(struct Node *curr, FILE *stream) {
     if (curr->left != NULL) {
         print_nodes(curr->left, stream);
     }
-    fprintf(stream, "%d ", curr->key);
+    fprintf(stream, "%lld ", curr->value);
     if (curr->right != NULL) {
         print_nodes(curr->right, stream);
     }
