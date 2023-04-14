@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define CAPACITY 50000
-
 bool equal(void *first, size_t size_first, void *second, size_t size_second) {
     if (size_first != size_second) {
         return false;
@@ -87,18 +85,20 @@ typedef struct {
     HashTableItem **bucket;
     struct LinkedList **overflow_bucket;
     int size;
+    int capacity;
 } HashTable;
 
-HashTable *table_init(void) {
+HashTable *table_init(int capacity) {
     HashTable *new = malloc(sizeof(HashTable));
-    new->bucket = calloc(CAPACITY, sizeof(HashTableItem*));
-    new->overflow_bucket = calloc(CAPACITY, sizeof(struct LinkedList*));
+    new->bucket = calloc(capacity, sizeof(HashTableItem*));
+    new->overflow_bucket = calloc(capacity, sizeof(struct LinkedList*));
+    new->capacity = capacity;
     new->size = 0;
     return new;
 }
 
 void clear_table(HashTable *table) {
-    for (int i = 0; i < CAPACITY; i++) {
+    for (int i = 0; i < table->capacity; i++) {
         if (table->bucket[i] != NULL) {
             clear_table_item(table->bucket[i]);
         }
@@ -124,7 +124,7 @@ static void handle_collision(HashTable *table, unsigned int ind, void *key, size
 }
 
 static void insert(HashTable *table, void *key, size_t size_key, void *value, size_t size_value) {
-    unsigned int ind = hash(key, size_key) % CAPACITY;
+    unsigned int ind = hash(key, size_key) % table->capacity;
     if (table->bucket[ind] == NULL) {
         table->bucket[ind] = table_item_init(key, size_key, value, size_value);
         table->size++;
@@ -134,7 +134,7 @@ static void insert(HashTable *table, void *key, size_t size_key, void *value, si
 }
 
 static HashTableItem *get_item(HashTable *table, void *key, size_t size_key) {
-    unsigned int ind = hash(key, size_key) % CAPACITY;
+    unsigned int ind = hash(key, size_key) % table->capacity;
     if (table->overflow_bucket[ind] == NULL) {
         if (table->bucket[ind] != NULL) {
             return table->bucket[ind];
@@ -167,7 +167,7 @@ bool consist(HashTable *table, void *key, size_t size_key) {
 }
 
 void delete(HashTable *table, void *key, size_t size_key) {
-    unsigned int ind = hash(key, size_key) % CAPACITY;
+    unsigned int ind = hash(key, size_key) % table->capacity;
     if (table->overflow_bucket[ind] != NULL || table->bucket[ind] != NULL) {
         if (table->overflow_bucket[ind] != NULL) {
             struct LinkedList *curr = table->overflow_bucket[ind];
@@ -201,7 +201,7 @@ int get_size(HashTable *table) {
 }
 
 void update(HashTable *table, void *key, size_t size_key, void *value, size_t size_value) {
-    unsigned int ind = hash(key, size_key) % CAPACITY;
+    unsigned int ind = hash(key, size_key) % table->capacity;
     if (table->overflow_bucket[ind] != NULL || table->bucket[ind] != NULL) {
         HashTableItem *item = get_item(table, key, size_key);
         item->value = value;
