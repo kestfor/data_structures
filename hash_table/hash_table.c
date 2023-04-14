@@ -20,14 +20,12 @@ typedef struct {
     void *key;
     size_t size_key;
     void *value;
-    size_t size_value;
 } HashTableItem;
 
 static HashTableItem *table_item_init(void *key, size_t size_key, void *value, size_t size_value) {
     HashTableItem *new = malloc(sizeof(HashTableItem));
     new->key = malloc(size_key);
     new->size_key = size_key;
-    new->size_value = size_value;
     new->value = malloc(size_value);
     memcpy(new->key, key, size_key);
     memcpy(new->value, value, size_value);
