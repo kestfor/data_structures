@@ -2,6 +2,7 @@
 #define FORWARD_LIST_H
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 typedef struct ForwardList ForwardList;
 
@@ -11,9 +12,9 @@ ForwardList *list_init(void);
 
 void clear_list(ForwardList *list);
 
-void push_front(ForwardList *list, int data);
+void push_front(ForwardList *list, void *data, size_t size_data);
 
-int front(ForwardList *list);
+void *front(ForwardList *list);
 
 void pop_front(ForwardList *list);
 
@@ -23,13 +24,13 @@ ListNode *begin(ForwardList *list);
 
 ListNode *next(ListNode *node);
 
-int get_data(ListNode *node);
+void *get_data(ListNode *node);
 
 int get_len(ForwardList *list);
 
-int get(ForwardList *list, int ind);
+void *get(ForwardList *list, int ind);
 
-void insert(ForwardList *list, int ind, int data);
+void insert(ForwardList *list, int ind, void *data, size_t size_data);
 
 void delete(ForwardList *list, int ind);
 

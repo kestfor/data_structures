@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 typedef struct ListNode {
     struct ListNode *next;
-    int data;
+    void *data;
 } ListNode;
 
 typedef struct {
@@ -11,9 +12,10 @@ typedef struct {
     int len;
 } ForwardList;
 
-static ListNode *node_init(int data) {
+static ListNode *node_init(void *data, size_t size_data) {
     ListNode *new = malloc(sizeof(ListNode));
-    new->data = data;
+    new->data = malloc(size_data);
+    memcpy(new->data, data, size_data);
     new->next = NULL;
     return new;
 }
@@ -30,6 +32,7 @@ void clear_list(ForwardList *list) {
         ListNode *curr = list->head;
         while (curr != NULL) {
             ListNode *next = curr->next;
+            free(curr->data);
             free(curr);
             curr = next;
         }
@@ -37,18 +40,18 @@ void clear_list(ForwardList *list) {
     free(list);
 }
 
-void push_front(ForwardList *list, int data) {
+void push_front(ForwardList *list, void *data, size_t size_data) {
     if (list->head == NULL) {
-        list->head = node_init(data);
+        list->head = node_init(data, size_data);
     } else {
-        ListNode *new_head = node_init(data);
+        ListNode *new_head = node_init(data, size_data);
         new_head->next = list->head;
         list->head = new_head;
     }
     list->len++;
 }
 
-int front(ForwardList *list) {
+void *front(ForwardList *list) {
     if (list->head == NULL) {
         exit(EXIT_FAILURE);
     } else {
@@ -61,6 +64,7 @@ void pop_front(ForwardList *list) {
         exit(EXIT_FAILURE);
     } else {
         ListNode *new_head = list->head->next;
+        free(list->head->data);
         free(list->head);
         list->head = new_head;
     }
@@ -79,7 +83,7 @@ ListNode *next(ListNode *node) {
     return node->next;
 }
 
-int get_data(ListNode *node) {
+void *get_data(ListNode *node) {
     return node->data;
 }
 
@@ -103,18 +107,18 @@ static ListNode *get_node(ForwardList *list, int ind) {
     exit(EXIT_FAILURE);
 }
 
-int get(ForwardList *list, int ind) {
+void *get(ForwardList *list, int ind) {
     return get_node(list, ind)->data;
 }
 
-void insert(ForwardList *list, int ind, int data) {
+void insert(ForwardList *list, int ind, void *data, size_t size_data) {
     if (ind == 0) {
-        push_front(list, data);
+        push_front(list, data, size_data);
         return;
     }
     ListNode *curr = get_node(list, ind - 1);
     ListNode *tmp = curr->next;
-    curr->next = node_init(data);
+    curr->next = node_init(data, size_data);
     curr->next->next = tmp;
     list->len++;
 }
@@ -126,6 +130,7 @@ void delete(ForwardList *list, int ind) {
     }
     ListNode *tmp = get_node(list, ind - 1);
     ListNode *next = tmp->next->next;
+    free(tmp->next->data);
     free(tmp->next);
     tmp->next = next;
     list->len--;

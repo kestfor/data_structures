@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define MAX_AMOUNT_ROOTS 64
 
@@ -7,29 +8,33 @@ static struct Node {
     struct Node *child;
     struct Node *left;
     struct Node *right;
-    int value;
+    void *data;
     int rank;
 } node;
 
 typedef struct FibonacciHeap {
     struct Node *min;
+    bool (*cmp) (void *, void*);
 } FibonacciHeap;
 
-struct Node *node_init(int value) {
+struct Node *node_init(void *data, size_t size_data) {
     struct Node *new_node = malloc(sizeof(node));
-    *new_node = (struct Node) {NULL, NULL, NULL, value, 0};
+    *new_node = (struct Node) {NULL, NULL, NULL, NULL, 0};
+    new_node->data = malloc(size_data);
+    memcpy(new_node->data, data, size_data);
     return new_node;
 }
 
-FibonacciHeap *heap_init(void) {
+FibonacciHeap *heap_init(bool (*cmp) (void *, void *)) {
     FibonacciHeap *new_heap = malloc(sizeof(FibonacciHeap));
     new_heap->min = NULL;
+    new_heap->cmp = cmp;
     return new_heap;
 }
 
 
-void insert(FibonacciHeap *heap, int value) {
-    struct Node *new_node = node_init(value);
+void insert(FibonacciHeap *heap, void *data, size_t size_data) {
+    struct Node *new_node = node_init(data, size_data);
     if (heap->min == NULL) {
         heap->min = new_node;
         new_node->left = new_node;
@@ -40,7 +45,7 @@ void insert(FibonacciHeap *heap, int value) {
         heap->min->right = new_node;
         new_node->right->left = new_node;
     }
-    if (value < heap->min->value) {
+    if (heap->cmp(data, heap->min->data)) {
         heap->min = new_node;
     }
 }
@@ -57,8 +62,8 @@ void union_roots(struct Node *first_root, struct Node *second_root) {
     tmp1->left = tmp2;
 }
 
-struct Node *merge(struct Node *first, struct Node *second) {
-    if (first->value < second->value) {
+struct Node *merge(struct Node *first, struct Node *second, bool (*cmp)(void *, void *)) {
+    if (cmp(first->data, second->data)) {
         second->right = second;
         second->left = second;
         if (first->child == NULL) {
@@ -92,7 +97,7 @@ void consolidate(FibonacciHeap *heap) {
             used[rank] = curr_node;
         } else {
             while (true) {
-                curr_node = merge(curr_node, used[rank]);
+                curr_node = merge(curr_node, used[rank], heap->cmp);
                 curr_node->left = curr_node;
                 curr_node->right = curr_node;
                 used[rank] = NULL;
@@ -112,7 +117,7 @@ void consolidate(FibonacciHeap *heap) {
     struct Node *prev = NULL;
     for (int i = 0; i < MAX_AMOUNT_ROOTS; i++) {
         if (used[i] != NULL) {
-            if (used[i]->value <= min->value) {
+            if (!heap->cmp(min->data, used[i]->data)) {
                 min = used[i];
             }
             if (prev == NULL) {
@@ -130,15 +135,15 @@ void consolidate(FibonacciHeap *heap) {
     heap->min = min;
 }
 
-int get_min(FibonacciHeap *heap) {
+void *get(FibonacciHeap *heap) {
     if (heap->min == NULL) {
         exit(EXIT_FAILURE);
     } else {
-        return heap->min->value;
+        return heap->min->data;
     }
 }
 
-int extract_min(FibonacciHeap *heap) {
+void extract(FibonacciHeap *heap) {
     struct Node *root = heap->min;
     if (root == NULL) {
         exit(EXIT_FAILURE);
@@ -148,7 +153,7 @@ int extract_min(FibonacciHeap *heap) {
         union_roots(root, child);
         root->child = NULL;
     }
-    int res = root->value;
+    void *res = root->data;
     if (root->right == root) {
         heap->min = NULL;
     } else {
@@ -159,8 +164,8 @@ int extract_min(FibonacciHeap *heap) {
         heap->min = right;
         consolidate(heap);
     }
+    free(root->data);
     free(root);
-    return res;
 }
 
 void clear_nodes(struct Node *curr_node) {
@@ -171,12 +176,14 @@ void clear_nodes(struct Node *curr_node) {
             clear_nodes(curr_node->child);
         }
         struct Node *next = curr_node->right;
+        free(curr_node->data);
         free(curr_node);
         curr_node = next;
     }
     if (start->child != NULL) {
         clear_nodes(start->child);
     }
+    free(start->data);
     free(start);
 }
 
@@ -190,31 +197,32 @@ void clear_heap(FibonacciHeap *heap) {
 
 typedef struct {
     FibonacciHeap *heap;
+    bool (*cmp)(void *, void *);
     int size;
 } PriorityQueue;
 
-PriorityQueue *priority_queue_init(void) {
+PriorityQueue *priority_queue_init(bool (*cmp)(void *, void *)) {
     PriorityQueue *new = malloc(sizeof(PriorityQueue));
-    new->heap = heap_init();
+    new->heap = heap_init(cmp);
     new->size = 0;
     return new;
 }
 
-void push(PriorityQueue *queue, int data) {
-    insert(queue->heap, data);
+void push(PriorityQueue *queue, void *data, size_t size_data) {
+    insert(queue->heap, data, size_data);
     queue->size++;
 }
 
-int top(PriorityQueue *queue) {
-    return get_min(queue->heap);
+void *top(PriorityQueue *queue) {
+    return get(queue->heap);
 }
 
 int size(PriorityQueue *queue) {
     return queue->size;
 }
 
-int pop(PriorityQueue *queue) {
-    return extract_min(queue->heap);
+void pop(PriorityQueue *queue) {
+    extract(queue->heap);
 }
 
 bool empty(PriorityQueue *queue) {

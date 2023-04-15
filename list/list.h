@@ -2,6 +2,7 @@
 #define LIST_H
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 typedef struct List List;
 
@@ -11,13 +12,13 @@ List *list_init(void);
 
 void clear_list(List *list);
 
-void push_front(List *list, int data);
+void push_front(List *list, void *data, size_t size_data);
 
-void push_back(List *list, int data);
+void push_back(List *list, void *data, size_t size_data);
 
-int front(List *list);
+void *front(List *list);
 
-int back(List *list);
+void *back(List *list);
 
 void pop_back(List *list);
 
@@ -33,13 +34,13 @@ ListNode *next(ListNode *node);
 
 ListNode  *prev(ListNode *node);
 
-int get_data(ListNode *node);
+void *get_data(ListNode *node);
 
 int get_len(List *list);
 
-int get(List *list, int ind);
+void *get(List *list, int ind);
 
-void insert(List *list, int ind, int data);
+void insert(List *list, int ind, void *data, size_t size_data);
 
 void delete(List *list, int ind);
 

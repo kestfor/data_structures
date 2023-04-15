@@ -2,30 +2,31 @@
 #define PRIORITY_QUEUE_H
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 typedef struct FibonacciHeap FibonacciHeap;
 
-FibonacciHeap *heap_init(void);
+FibonacciHeap *heap_init(bool (*cmp)(void *, void *));
 
-void insert(FibonacciHeap *heap, int value);
+void insert(FibonacciHeap *heap, void *data, size_t size_data);
 
-int extract_min(FibonacciHeap *heap);
+void extract(FibonacciHeap *heap);
 
-int get_min(FibonacciHeap *heap);
+void *get(FibonacciHeap *heap);
 
 void clear_heap(FibonacciHeap *heap);
 
 typedef struct PriorityQueue PriorityQueue;
 
-PriorityQueue *priority_queue_init(void);
+PriorityQueue *priority_queue_init(bool (*cmp)(void *, void *));
 
-void push(PriorityQueue *queue, int data);
+void push(PriorityQueue *queue, void *data, size_t size_data);
 
-int top(PriorityQueue *queue);
+void *top(PriorityQueue *queue);
 
 int size(PriorityQueue *queue);
 
-int pop(PriorityQueue *queue);
+void pop(PriorityQueue *queue);
 
 bool empty(PriorityQueue *queue);
 
