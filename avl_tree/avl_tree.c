@@ -1,18 +1,22 @@
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <string.h>
 
 static struct Node {
-    int key;
-    long long value;
+    void *key;
+    void *data;
     int height;
     struct Node *left;
     struct Node *right;
 } Node;
 
-struct Node *node_init(int key, long long value) {
+struct Node *node_init(void *key, size_t size_key, void *data, size_t size_data) {
     struct Node *new_node = malloc(sizeof(struct Node));
-    *new_node = (struct Node) {key, value, 1, NULL, NULL};
+    *new_node = (struct Node) {NULL, NULL, 1, NULL, NULL};
+    new_node->key = malloc(size_key);
+    new_node->data = malloc(size_data);
+    memcpy(new_node->key, key, size_key);
+    memcpy(new_node->data, data, size_data);
     return new_node;
 }
 
@@ -67,67 +71,73 @@ static struct Node *balance(struct Node *n) {
 
 typedef struct {
     struct Node *root;
+    bool (*cmp) (void *, void *);
 } AvlTree;
 
-static struct Node *insert(struct Node *curr_node, int key, long long value) {
+static struct Node *insert(struct Node *curr_node, void *key, size_t size_key, void *data, size_t size_data, bool (*cmp)(void *, void*)) {
     if (!curr_node) {
-        return node_init(key, value);
+        return node_init(key, size_key, data, size_data);
     }
-    if (curr_node->key == key) {
-        curr_node->value = value;
+    bool left = cmp(key, curr_node->key);
+    bool right = cmp(curr_node->key, key);
+    if (!left && !right) {
+        memcpy(curr_node->data, data, size_data);
     }
-    if (key < curr_node->key) {
-        curr_node->left = insert(curr_node->left, key, value);
+    if (left) {
+        curr_node->left = insert(curr_node->left, key, size_key, data, size_data, cmp);
     } else {
-        curr_node->right = insert(curr_node->right, key, value);
+        curr_node->right = insert(curr_node->right, key, size_key, data, size_data, cmp);
     }
     return balance(curr_node);
 }
 
-AvlTree *tree_init(void) {
+AvlTree *tree_init(bool (*cmp)(void *, void *)) {
     AvlTree *new_tree = malloc(sizeof(AvlTree));
     new_tree->root = NULL;
+    new_tree->cmp = cmp;
     return new_tree;
 }
 
-void add(AvlTree *tree, int key, long long value) {
+void add(AvlTree *tree, void *key, size_t size_key, void *data, size_t size_data) {
     if (tree->root == NULL) {
-        struct Node *new_node = node_init(key, value);
+        struct Node *new_node = node_init(key, size_key, data, size_data);
         tree->root = new_node;
     } else {
-        tree->root = insert(tree->root, key, value);
+        tree->root = insert(tree->root, key, size_key, data, size_data, tree->cmp);
     }
 }
 
-static struct Node *find(struct Node *curr, int key) {
+static struct Node *find(struct Node *curr, void *key, size_t size_key, bool (*cmp)(void *, void *)) {
     if (curr == NULL) {
         return NULL;
     }
-    if (curr->key == key) {
+    bool left = cmp(key, curr->key);
+    bool right = cmp(curr->key, key);
+    if (!left && !right) {
         return curr;
     } else {
-        if (key < curr->key) {
-            return find(curr->left, key);
+        if (left) {
+            return find(curr->left, key, size_key, cmp);
         } else {
-            return find(curr->right, key);
+            return find(curr->right, key, size_key, cmp);
         }
     }
 }
 
-long long get(AvlTree *tree, int key) {
-    struct Node *res = find(tree->root, key);
+void *get(AvlTree *tree, void *key, size_t size_key) {
+    struct Node *res = find(tree->root, key, size_key, tree->cmp);
     if (res == NULL) {
         exit(EXIT_FAILURE);
     } else {
-        return res->value;
+        return res->data;
     }
 }
 
-bool consist(AvlTree *tree, int key) {
+bool consist(AvlTree *tree, void *key, size_t size_key) {
     if (tree->root == NULL) {
         return false;
     } else {
-        return find(tree->root, key) != NULL;
+        return find(tree->root, key, size_key, tree->cmp) != NULL;
     }
 }
 
@@ -142,6 +152,8 @@ static void clear_nodes(struct Node *curr) {
     if (curr->right != NULL) {
         clear_nodes(curr->right);
     }
+    free(curr->key);
+    free(curr->data);
     free(curr);
 }
 
@@ -150,23 +162,26 @@ static struct Node* find_min(struct Node* node) {
 }
 
 static struct Node* remove_min(struct Node* node) {
-    if (node->left==0 )
+    if (node->left == NULL) {
         return node->right;
+    }
     node->left = remove_min(node->left);
     return balance(node);
 }
 
-static struct Node* remove_node(struct Node* node, int key) {
+static struct Node* remove_node(struct Node* node, void *key, size_t size_key, bool (*cmp)(void *, void *)) {
     if (node == NULL) {
         return NULL;
     }
-    if (key < node->key) {
-        node->left = remove_node(node->left, key);
-    } else if (key > node->key) {
-        node->right = remove_node(node->right, key);
+    if (cmp(key, node->key)) {
+        node->left = remove_node(node->left, key, size_key, cmp);
+    } else if (cmp(node->key, key)) {
+        node->right = remove_node(node->right, key, size_key, cmp);
     } else {
         struct Node *left = node->left;
         struct Node *right = node->right;
+        free(node->key);
+        free(node->data);
         free(node);
         if (right == NULL) {
             return left;
@@ -179,26 +194,12 @@ static struct Node* remove_node(struct Node* node, int key) {
     return balance(node);
 }
 
-void delete(AvlTree *tree, int key) {
+void delete(AvlTree *tree, void *key, size_t size_key) {
     if (tree->root == NULL) {
         return;
     } else {
-        tree->root = remove_node(tree->root, key);
+        tree->root = remove_node(tree->root, key, size_key, tree->cmp);
     }
-}
-
-static void print_nodes(struct Node *curr, FILE *stream) {
-    if (curr->left != NULL) {
-        print_nodes(curr->left, stream);
-    }
-    fprintf(stream, "%lld ", curr->value);
-    if (curr->right != NULL) {
-        print_nodes(curr->right, stream);
-    }
-}
-
-void traverse(AvlTree *tree, FILE *stream) {
-    print_nodes(tree->root, stream);
 }
 
 void clear_tree(AvlTree *tree) {
