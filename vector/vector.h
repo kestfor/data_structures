@@ -7,7 +7,7 @@ typedef struct vector vector;
 
 vector *vector_init(int size);
 
-void push_back(vector *v, void *value, size_t size_data);
+void push_back(vector *v, void *data, size_t size_data);
 
 void shrink_to_fit(vector *v);
 

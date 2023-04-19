@@ -12,7 +12,7 @@ void insert(FibonacciHeap *heap, void *data, size_t size_data);
 
 void extract(FibonacciHeap *heap);
 
-void *get(FibonacciHeap *heap);
+void *get_top(FibonacciHeap *heap);
 
 void clear_heap(FibonacciHeap *heap);
 

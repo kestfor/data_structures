@@ -10,7 +10,7 @@ static struct Node {
     struct Node *right;
     void *data;
     int rank;
-} node;
+} Node;
 
 typedef struct FibonacciHeap {
     struct Node *min;
@@ -18,7 +18,7 @@ typedef struct FibonacciHeap {
 } FibonacciHeap;
 
 struct Node *node_init(void *data, size_t size_data) {
-    struct Node *new_node = malloc(sizeof(node));
+    struct Node *new_node = malloc(sizeof(struct Node));
     *new_node = (struct Node) {NULL, NULL, NULL, NULL, 0};
     new_node->data = malloc(size_data);
     memcpy(new_node->data, data, size_data);
@@ -135,7 +135,7 @@ void consolidate(FibonacciHeap *heap) {
     heap->min = min;
 }
 
-void *get(FibonacciHeap *heap) {
+void *get_top(FibonacciHeap *heap) {
     if (heap->min == NULL) {
         exit(EXIT_FAILURE);
     } else {
@@ -153,7 +153,6 @@ void extract(FibonacciHeap *heap) {
         union_roots(root, child);
         root->child = NULL;
     }
-    void *res = root->data;
     if (root->right == root) {
         heap->min = NULL;
     } else {
@@ -214,7 +213,7 @@ void push(PriorityQueue *queue, void *data, size_t size_data) {
 }
 
 void *top(PriorityQueue *queue) {
-    return get(queue->heap);
+    return get_top(queue->heap);
 }
 
 int size(PriorityQueue *queue) {
@@ -223,6 +222,7 @@ int size(PriorityQueue *queue) {
 
 void pop(PriorityQueue *queue) {
     extract(queue->heap);
+    queue->size--;
 }
 
 bool empty(PriorityQueue *queue) {
